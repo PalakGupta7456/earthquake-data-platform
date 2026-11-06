@@ -1,0 +1,34 @@
+version: 2
+models:
+  - name: stg_events
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+      - name: mag
+        tests:
+          - not_null
+          - in_range: {min_value: -2, max_value: 10}
+      - name: lat
+        tests:
+          - in_range: {min_value: -90, max_value: 90}
+      - name: lon
+        tests:
+          - in_range: {min_value: -180, max_value: 180}
+      - name: depth_class
+        tests:
+          - accepted_values: {values: ['shallow', 'intermediate', 'deep']}
+  - name: fct_daily_activity
+    columns:
+      - name: event_date
+        tests: [unique, not_null]
+      - name: events
+        tests:
+          - in_range: {min_value: 0, max_value: 100000}
+  - name: mart_region_activity
+    columns:
+      - name: region
+        tests: [unique, not_null]
+  - name: fct_recent_events
+    columns:
+      - name: event_id
+        tests: [unique]

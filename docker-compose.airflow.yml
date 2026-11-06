@@ -1,0 +1,23 @@
+# Local Apache Airflow for the earthquake pipeline (standalone mode: scheduler,
+# API server and SQLite metadata DB in one container; fine for development).
+#
+#   docker compose -f docker-compose.airflow.yml up --build
+#   open http://localhost:8080   (user/password printed in the logs, or airflow/airflow)
+services:
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    command: standalone
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      _AIRFLOW_WWW_USER_USERNAME: airflow
+      _AIRFLOW_WWW_USER_PASSWORD: airflow
+      QUAKE_WAREHOUSE: /opt/airflow/project/data/warehouse.duckdb
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/project/data
+      - ./docs:/opt/airflow/project/docs
+    ports:
+      - "8080:8080"

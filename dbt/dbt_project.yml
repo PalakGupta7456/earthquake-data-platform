@@ -1,0 +1,16 @@
+name: quake
+version: "1.0.0"
+config-version: 2
+profile: quake
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: target
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  quake:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

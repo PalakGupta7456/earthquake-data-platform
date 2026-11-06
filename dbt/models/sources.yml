@@ -1,0 +1,11 @@
+version: 2
+sources:
+  - name: silver
+    schema: main
+    tables:
+      - name: silver_events
+        description: Validated, de-duplicated USGS events (latest revision per event).
+        loaded_at_field: ingested_at
+        freshness:
+          warn_after: {count: 3, period: hour}
+          error_after: {count: 12, period: hour}

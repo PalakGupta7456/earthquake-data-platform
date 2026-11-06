@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint, unit tests, dbt build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - name: Unit + integration tests (includes a full dbt build with data tests)
+        run: pytest -v
+      - name: dbt parse and compile
+        run: |
+          python -m quake.pipeline --synthetic
+          cd dbt && dbt compile --profiles-dir . --quiet
+        env:
+          QUAKE_WAREHOUSE: ${{ github.workspace }}/data/warehouse.duckdb
+
+  airflow-dag:
+    name: Airflow DAG integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Airflow with official constraints
+        run: |
+          AIRFLOW_VERSION=2.10.5
+          pip install "apache-airflow==${AIRFLOW_VERSION}" \
+            --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.12.txt"
+      - name: Import DAG and check structure
+        run: |
+          python - <<'PY'
+          from airflow.models import DagBag
+          bag = DagBag(dag_folder="dags", include_examples=False)
+          assert not bag.import_errors, bag.import_errors
+          dag = bag.get_dag("earthquake_medallion")
+          assert dag is not None
+          tasks = {t.task_id for t in dag.tasks}
+          print("tasks:", sorted(tasks))
+          assert {"extract_and_land", "load_silver", "dbt_build", "quality_gate", "analytics_and_publish"} <= tasks
+          assert dag.get_task("quality_gate").upstream_task_ids == {"dbt_build"}
+          PY
+
+  airflow-image:
+    name: Build Airflow image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.airflow
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

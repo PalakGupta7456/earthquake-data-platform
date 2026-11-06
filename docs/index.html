@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seismic Ledger — earthquake data platform</title>
+  <meta name="description" content="A medallion data platform on the live USGS earthquake feed: bronze Parquet, silver DuckDB, gold dbt models, statistical seismology and an hourly dashboard.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#">Seismic Ledger</a>
+    <p class="meta" id="meta">Loading the warehouse…</p>
+    <nav><a href="#pipeline">Pipeline</a><a href="#gr">Statistics</a><a href="https://github.com/PalakGupta7456/earthquake-data-platform">GitHub</a></nav>
+  </header>
+
+  <section class="hero">
+    <div id="map" role="region" aria-label="Earthquakes in the last 7 days"></div>
+    <div class="overlay">
+      <p class="count" id="count">—</p>
+      <p class="count-label">earthquakes of magnitude 2.5 or more in the last 7 days</p>
+      <p class="largest" id="largest"></p>
+      <div class="legend">
+        <span>Depth</span>
+        <ul id="depth-legend"></ul>
+        <span>Circle size follows magnitude. Dashed rings are active sequences.</span>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <section class="three" id="pipeline">
+      <div class="health">
+        <h2>Pipeline health</h2>
+        <p class="sub" id="last-run"></p>
+        <dl class="stats" id="stats"></dl>
+        <h3>Last 24 runs</h3>
+        <div class="runs" id="runs" aria-label="Recent pipeline runs; bar height is duration"></div>
+      </div>
+      <div class="seqs">
+        <h2>Active sequences</h2>
+        <p class="sub">Spatio-temporal DBSCAN over the last 30 days groups events that are close in both place and time.</p>
+        <ol id="clusters"></ol>
+      </div>
+      <div class="daily">
+        <h2>Daily activity</h2>
+        <p class="sub">Events per day (bars) and the 7-day average (line), from the dbt mart <code>fct_daily_activity</code>.</p>
+        <div class="chart-box"><canvas id="daily" role="img" aria-label="Daily earthquake counts"></canvas></div>
+      </div>
+    </section>
+
+    <section class="gr" id="gr">
+      <h2>How often do big ones happen here?</h2>
+      <p class="lead">For each region, magnitudes follow the Gutenberg-Richter law: every step up in magnitude is about ten times rarer. Fitting the b-value by maximum likelihood gives each region's expected rate of large events. A Poisson model then turns that rate into the chance of at least one in the next 30 days.</p>
+      <div class="gr-grid">
+        <table class="gr-table" id="gr-table">
+          <thead><tr><th>Region</th><th>Events</th><th>b-value</th><th>Mc</th><th>M5+ in 30 days</th><th>M6+ in 30 days</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div>
+          <h3 id="gr-title">—</h3>
+          <div class="chart-box tall"><canvas id="grchart" role="img" aria-label="Frequency-magnitude plot"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="arch">
+      <h2>From feed to page</h2>
+      <ol class="flow">
+        <li><b>USGS feed</b><span>Rolling 7-day GeoJSON every hour. A one-year FDSN backfill runs on the first run.</span></li>
+        <li><b>Bronze</b><span>Raw records landed as date-partitioned Parquet, untouched, so any day can be replayed.</span></li>
+        <li><b>Silver</b><span>Validated, typed, de-duplicated DuckDB table. Idempotent upserts keep the latest USGS revision. Bad rows go to quarantine.</span></li>
+        <li><b>Gold</b><span>dbt models and data tests: staging view, daily facts, region marts and frequency-magnitude tables.</span></li>
+        <li><b>Analytics</b><span>Gutenberg-Richter fits and DBSCAN sequence detection.</span></li>
+        <li><b>Serve</b><span>Apache Airflow orchestrates locally. GitHub Actions runs the same tasks serverless every hour and deploys this page.</span></li>
+      </ol>
+    </section>
+  </main>
+  <footer>Data: U.S. Geological Survey Earthquake Hazards Program. Probabilities are statistical illustrations, not official forecasts.</footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
