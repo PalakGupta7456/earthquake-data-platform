@@ -13,7 +13,7 @@ A production-style data-engineering project. Every hour it ingests the real-time
 
 It then runs **dbt data tests** and a **data-quality gate**, and fits **statistical seismology models** on the gold layer. Finally it publishes an interactive dashboard. The same tasks are orchestrated by an **Apache Airflow DAG** for local or production runs, and by **GitHub Actions** for free serverless hourly runs.
 
-![Dashboard](docs/screenshot.png)
+![Dashboard](docs/screenshot.jpg)
 
 ## Architecture
 
