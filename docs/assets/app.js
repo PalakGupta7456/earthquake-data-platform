@@ -35,8 +35,8 @@
 
     map = L.map("map", { worldCopyJump: true, scrollWheelZoom: false, zoomControl: false }).setView([15, 150], 2);
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap, &copy; CARTO, data USGS", subdomains: "abcd", maxZoom: 9,
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+      attribution: "Tiles &copy; Esri, data USGS", maxZoom: 16,
     }).addTo(map);
     [...ev].sort((a, b) => a.m - b.m).forEach((e) => {
       const c = depthColor(e.d);
