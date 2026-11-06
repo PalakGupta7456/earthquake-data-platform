@@ -49,7 +49,7 @@ jobs:
           from airflow.models import DagBag
           bag = DagBag(dag_folder="dags", include_examples=False)
           assert not bag.import_errors, bag.import_errors
-          dag = bag.get_dag("earthquake_medallion")
+          dag = bag.dags.get("earthquake_medallion")  # read parsed DAG directly; no metadata DB needed
           assert dag is not None
           tasks = {t.task_id for t in dag.tasks}
           print("tasks:", sorted(tasks))
