@@ -8,3 +8,4 @@ dbt/target/
 dbt/logs/
 dbt/dbt_packages/
 logs/
+dbt/.user.yml
